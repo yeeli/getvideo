@@ -1,3 +1,5 @@
+#coding:utf-8
+
 module Getvideo
   class Sohu
    def initialize(uri)

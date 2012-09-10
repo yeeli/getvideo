@@ -1,3 +1,4 @@
+#coding:utf-8
 
 module Getvideo
   class Tudou
@@ -20,7 +21,13 @@ module Getvideo
     end
 
     def flash
-      "http://www.tudou.com/v/#{code}/v.swf"
+      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
+        "http://www.tudou.com/l/#{code}/&iid=#{iid}/v.swf"
+      elsif  url =~ /\/listplay\/([^.]+)\.html/
+        "http://www.tudou.com/l/#{code}/v.swf"
+      else
+        "http://www.tudou.com/v/#{code}/v.swf"
+      end
     end
 
     def m3u8
@@ -28,9 +35,9 @@ module Getvideo
     end
 
     def flv
-      flv_url = URI.parse "http://v2.tudou.com/v?it="+ iid
+      flv_url = URI.parse "http://v2.tudou.com/v?it=#{iid}&st=1,2,3,4,99"
       http = Net::HTTP.new(flv_url.host,flv_url.port)
-      req = Net::HTTP::Get.new(flv_url.request_uri,{"User-Agent"=> "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_0) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.79 Safari/537.1"})
+      req = Net::HTTP::Get.new(flv_url.request_uri,{"User-Agent"=> ""})
       res = http.request req
       flv_doc = Nokogiri::XML(res.body)
       video_list = []
@@ -40,14 +47,41 @@ module Getvideo
       return video_list
     end
 
+    def id
+      iid
+    end
+
     private
 
     def code
-      @body.match(/icode\s*=\s*(\S+)/)[1]
+      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
+        url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)[0][2]
+      elsif url =~ /\/listplay\/([^.]+)\.html/
+        @body.match(/icode\s*:\s*\"(\S+)\"/)[1]
+      else
+        @body.match(/icode\s*=\s*'(\S+)'/)[1]
+      end
     end
 
     def iid
-      @body.match(/iid\s*=\s*(\S+)/)[1]
+      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
+        icode = url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)
+        return get_iid(icode[0][2])
+      elsif url =~ /\/listplay\/([^.]+)\.html/
+        icode = url.scan(/\/listplay\/([^.]+)\.html/)
+        script =  @body.match(/<script>([^*]+)<\/script>/)[1]
+        script.match(/iid\s*:\s*(\S+)/)[1]
+      else
+        @body.match(/iid\s*=\s*(\S+)/)[1]
+      end
+    end
+
+    def get_iid(icode)
+      script =  @body.match(/<script>([^*]+)<\/script>/)[1]
+      icode_list = script.scan(/icode\s*:\s*\"(\S+)\"/)
+      iid_list = script.scan(/iid\s*:\s*(\S+)/)
+      num = icode_list.index([icode])
+      iid_list[num][0]
     end
 
     def response

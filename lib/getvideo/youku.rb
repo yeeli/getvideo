@@ -45,6 +45,13 @@ module Getvideo
       return video_list
     end
 
+    def to_json
+      { "url": url,
+        "flash": flash,
+        "m3u8": m3u8,
+        "flv": flv }
+    end
+
 
     private
     def info_path
