@@ -2,31 +2,53 @@
 
 module Getvideo
   class Tudou
+    attr_accessor :url
+
     def initialize(uri)
       @url = uri
-      @site = "http://v2.tudou.com/v?it="
-      @body = response.body
+      @site = "http://v2.tudou.com/v"
+      @info = parse_html(html_url)
+      @body = Nokogiri::XML(response.body)
     end
 
-    def url=(param)
-      @url= param
+    def id
+      iid
     end
 
-    def url
-      @url
+    def html_url
+      if url =~ /\/(a|o|l)\/.*.\.swf/
+       type = url.scan(/\/(a|o|l)\/.*.\.swf/)[0][0]
+       case type
+       when "a"
+        "http://www.tudou.com/albumplay/#{acode}/#{lcode}.html"
+       when "o"
+         "http://www.tudou.com/oplay/#{acode}/#{lcode}.html"
+       when "l"
+         "http://www.tudou.com/listplay/#{acode}/#{lcode}.html"
+       end
+      elsif url =~ /\/(programs|albumplay|listplay|oplay)/
+        url
+      else
+        "http://www.tudou.com/programs/view/#{lcode}/"
+      end
+    end
+
+    def title
+      @body.children()[0].attr("title")
     end
 
     def cover
-      @body.match(/lpic\s*=\s*(\S+)/)[1]
+      @info.body.match(/pic\s*:\s*(\S+)/)[1]
     end
 
     def flash
-      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
-        "http://www.tudou.com/l/#{code}/&iid=#{iid}/v.swf"
-      elsif  url =~ /\/listplay\/([^.]+)\.html/
-        "http://www.tudou.com/l/#{code}/v.swf"
+      if url =~ /\/(v|a|o|l)\/.*.\.swf/
+        url
+      elsif url =~ /\/(albumplay|listplay|oplay)/
+        url_type = url.scan(/\/((a)lbumplay|(l)istplay|(o)play)/)[0][1]
+        "http://www.tudou.com/#{url_type}/#{acode}/&rpid=116105338&resourceId=116105338_04_05_99&iid=#{iid}/v.swf"
       else
-        "http://www.tudou.com/v/#{code}/v.swf"
+        "http://www.tudou.com/v/#{lcode}/&rpid=116105338&resourceId=116105338_04_05_99/v.swf"
       end
     end
 
@@ -34,60 +56,92 @@ module Getvideo
       "http://m3u8.tdimg.com/#{iid[0,3]}/#{iid[3,3]}/#{iid[6,3]}/2.m3u8"
     end
 
-    def flv
-      flv_url = URI.parse "http://v2.tudou.com/v?it=#{iid}&st=1,2,3,4,99"
-      http = Net::HTTP.new(flv_url.host,flv_url.port)
-      req = Net::HTTP::Get.new(flv_url.request_uri,{"User-Agent"=> ""})
-      res = http.request req
-      flv_doc = Nokogiri::XML(res.body)
-      video_list = []
-      flv_doc.css("f").each do |f|
-        video_list << f.content
+    def media
+      video_list = {}
+      video_list["f4v"] = []
+      video_list["flv"] = []
+      old_brt = ""
+      @body.css("f").each do | file |
+      brt = file.attr("brt")
+      if brt != old_brt
+        if file.content =~ /f4v/
+          video_list["f4v"] << file.content
+        elsif file.content =~ /flv/
+          video_list["flv"] << file.content
+        end
+        old_brt = brt
+      end
       end
       return video_list
     end
 
-    def id
-      iid
+    def play_media
+      media["f4v"]
     end
+
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
+    end
+
+
 
     private
 
-    def code
-      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
-        url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)[0][2]
-      elsif url =~ /\/listplay\/([^.]+)\.html/
-        @body.match(/icode\s*:\s*\"(\S+)\"/)[1]
+    def info_path
+      @site + "?it=" + iid 
+    end
+
+    def response
+      uri = URI.parse info_path
+      http = Net::HTTP.new uri.host, uri.port
+      req = Net::HTTP::Get.new(uri.request_uri,{"User-Agent"=> ""})
+      http.request req
+    end
+
+    def lcode
+      if url =~ /\/v\/.*.\.swf/
+        url.scan(/\/v\/([^\/]+)\//)[0][0]
       else
-        @body.match(/icode\s*=\s*'(\S+)'/)[1]
+        Nokogiri::XML(response.body).children()[0].attr("code")
+      end
+    end
+
+    def acode
+      if url =~ /\/(a|o|l)\/.*.\.swf/
+        url.scan(/\/[a|o|l]\/([^\/]+)\//)[0][0]
+      elsif url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
+        url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)[0][1]
+      elsif url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\.html/
+        url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\.html/)[0][1]
       end
     end
 
     def iid
-      if url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
-        icode = url.scan(/\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)
-        return get_iid(icode[0][2])
-      elsif url =~ /\/listplay\/([^.]+)\.html/
-        icode = url.scan(/\/listplay\/([^.]+)\.html/)
-        script =  @body.match(/<script>([^*]+)<\/script>/)[1]
-        script.match(/iid\s*:\s*(\S+)/)[1]
+      if url =~ /\/(programs|albumplay|listplay|oplay)/
+        get_iid[0][0]
+      elsif url =~ /\/v\/.*.\.swf/
+        get_iid[0][0]
+      elsif url =~ /\/(a|o|l)\/.*.\.swf/
+        url.scan(/iid=([^\/]+)/)[0][0]
       else
-        @body.match(/iid\s*=\s*(\S+)/)[1]
+        url
       end
     end
 
-    def get_iid(icode)
-      script =  @body.match(/<script>([^*]+)<\/script>/)[1]
-      icode_list = script.scan(/icode\s*:\s*\"(\S+)\"/)
-      iid_list = script.scan(/iid\s*:\s*(\S+)/)
-      num = icode_list.index([icode])
-      iid_list[num][0]
+    def get_iid
+      @info.body.scan(/iid\s*:\s*(\S+)/)
     end
 
-    def response
-      uri = URI.parse(url)
+    def parse_html(v_url)
+      uri = URI.parse(v_url)
       http = Net::HTTP.new(uri.host, uri.port) 
-      res = http.get(uri.path)
+      http.get(uri.path)
     end
   end
 end

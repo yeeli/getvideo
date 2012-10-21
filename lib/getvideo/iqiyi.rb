@@ -2,22 +2,31 @@
 
 module Getvideo
   class Iqiyi
+    attr_accessor :url
+
     def initialize(uri)
       @url = uri
       @site = "http://cache.video.qiyi.com/v/"
       @body = Nokogiri::XML(response.body)
     end
 
-    def url=(param)
-      @url = param
+    def html_url
+      @body.css("videoUrl").text
     end
 
-    def url
-      @url
-    end
 
     def id
-     parse_vid[1]
+     if url =~ /\.html/
+       parse_vid[1]
+     elsif url =~ /swf/
+       url.scan(/com\/([^\/]+)/)[0][0]
+     else
+        url
+     end
+    end
+
+    def title
+      @body.css("title").text
     end
 
     def cover
@@ -35,15 +44,31 @@ module Getvideo
      "http://player.video.qiyi.com/#{id}/#{position}/#{duration}/#{video_url}"[0..-5]+"swf"
     end
 
-    def flv
-      video_list = []
+    def media
+      video_list = {}
+      video_list["ts"] = []
       @body.css("file").each do |f|
-        video_list << f.content[0..-4] + "ts"
+        video_list["ts"] << f.content[0..-4] + "ts"
       end
       return  video_list
     end
 
+    def play_media
+      media["ts"]
+    end
+
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
+    end
+
     private
+
     def info_path
       @site + id
     end

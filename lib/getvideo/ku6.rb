@@ -2,22 +2,33 @@
 
 module Getvideo
   class Ku6
+    attr_accessor :url
     def initialize(uri)
       @url = uri
       @site = "http://v.ku6.com/fetch.htm"
       @body = JSON.parse(response.body)
     end
 
-    def url=(param)
-      @url= param
+    def html_url
+      if url =~ /\.html/
+        url
+      else
+        "http://v.ku6.com/show/#{id}.html"
+      end
     end
 
-    def url
-      @url
+    def title
+      @body["data"]["t"]
     end
 
     def id
-      @url.split("/").last.split(".html")[0]
+      if url =~ /\.html/
+        url.split("/").last.split(".html")[0]
+      elsif url =~ /\.swf/
+        url.split("/")[-2]
+      else
+        url
+      end
     end
 
     def cover
@@ -32,12 +43,27 @@ module Getvideo
       "http://v.ku6.com/fetchwebm/#{id}.m3u8"
     end
 
-    def flv
-      video_list = []
+    def media
+      video_list = {}
+      video_list["f4v"] = []
       @body["data"]["f"].split(",").each do |f|
-        video_list << f
+        video_list["f4v"] << f
       end
       return video_list
+    end
+
+    def play_media
+      media["f4v"]
+    end
+
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
     end
 
     private

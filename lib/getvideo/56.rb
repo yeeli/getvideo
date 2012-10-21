@@ -2,25 +2,28 @@
 
 module Getvideo 
   class Wole
+    attr_reader :url
+    attr_reader :title
+
     def initialize(uri)
       @url = uri
       @body = JSON.parse(response)
     end
 
-    def url=(param)
-      @url= param
-    end
-
-    def url
-      @url
+    def html_url
+      info_path
     end
 
     def id
-      @url.scan(/v_([^*]+).html/)[0][0]
+      if url =~ /\.[html|swf]/
+        url.scan(/v_([^\.]+)\.[html|swf]/)[0][0]
+      else
+        url
+      end
     end
 
     def cover
-      @body["bimg"]
+      "http://img." + @body["img_host"] + "/images/" + @body["URL_pURL"] + "/" + @body["URL_sURL"] + "/" + @body["user_id"] + "i56olo56i56.com_" + @body["URL_URLid"] + ".jpg"
     end
 
     def flash
@@ -31,10 +34,31 @@ module Getvideo
       "http://vxml.56.com/m3u8/#{videoid}"
     end
 
-    def flv
+    def media
+      video_list = {}
       fid = "f"+@body["id"][-2,2] +"."
       flv = "http://"+ fid + "r.56.com/"+ fid + @body["URL_host"]+ "/flvdownload/"+ @body["URL_pURL"] + "/"+ @body["URL_sURL"]+"/"+ @body["URL_URLid"]
-      [flv+ ".flv"]
+      video_list["flv"] = []
+      video_list["flv"] << flv+ ".flv"
+      video_list["flv"] << flv+ "clear.flv"
+      video_list["mp4"] = []
+      video_list["mp4"] << flv+ "_vga.mp4"
+      video_list["mp4"] << flv+ "_qqvga.mp4"
+      return video_list
+    end
+
+    def play_media
+      media["flv"][0]
+    end
+
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
     end
 
     private
@@ -43,12 +67,21 @@ module Getvideo
       puts @body["id"]
     end
 
+    def info_path
+      if url =~ /\.html/
+        url
+      else
+        "http://www.56.com/u/v_#{id}.html"
+      end
+    end
+
     def response
-      uri = URI.parse(@url)
+      uri = URI.parse(info_path)
       http = Net::HTTP.new(uri.host, uri.port)
       res = http.get(uri.path)
       doc = Nokogiri::HTML(res.body)
       str = ""
+      @title = doc.css("#VideoTitle h1").text
       doc.css("script").each do | s |
         if s.content =~ /var _oFlv_o/
           s.content.split("\n").each do |c|

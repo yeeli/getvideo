@@ -2,24 +2,28 @@
 
 module Getvideo
   class Youku
+    attr_accessor :url
+
     def initialize(uri)
       @url = uri
       @site = "http://v.youku.com/player/getPlayList/VideoIDS/" 
-
       @body = JSON.parse(response.body)
     end
 
-    def url=(param)
-      @url= param
+    def html_url
+      "http://v.youku.com/v_show/id_#{id}.html"
     end
 
-    def url
-      @url
+    def title
+      @body["data"][0]["title"]
     end
-
 
     def id
-      @url.split("/").last.split(".")[0].delete("id_")
+      if url =~ /\.html/
+        url.scan(/id_([^.]+)/)[0][0]
+      elsif url =~ /\.swf/
+        url.scan(/sid\/([^\/]+)\/v.swf/)[0][0]
+      end
     end
 
     def cover
@@ -35,27 +39,42 @@ module Getvideo
       "http://v.youku.com/player/getM3U8/vid/#{videoid}/type/flv/ts/#{Time.now.to_i}/v.m3u8" 
     end
 
-    def flv
-      type = "flv"
+    def media(type = nil)
+      video_list = {}
+    @body["data"][0]["streamfileids"].each_key do |type|
       stream = parse_stream(type)
-      video_list = []
+      video_list[type] = []
       segs(type).each do |s|
-        video_list << "http://f.youku.com/player/getFlvPath/sid/"+sid+"/st/#{type}/fileid/#{stream[0..8]+s["no"].to_i.to_s(16)+stream[10..-1]}_0#{s["no"].to_i.to_s(16)}?K="+s["k"]
+       video_list[type] << "http://f.youku.com/player/getFlvPath/sid/"+sid+"/st/#{type}/fileid/#{stream[0..8]+s["no"].to_i.to_s(16)+stream[10..-1]}_0#{s["no"].to_i.to_s(16)}?K="+s["k"]
       end
-      return video_list
+    end
+    return video_list
     end
 
-    def to_json
-      { "url": url,
-        "flash": flash,
-        "m3u8": m3u8,
-        "flv": flv }
+    def play_media
+      media["flv"]
     end
 
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
+    end
 
     private
+
     def info_path
       @site + id
+    end
+
+    def response
+      uri = URI.parse(info_path)
+      http = Net::HTTP.new(uri.host, uri.port)
+      res = http.get(uri.path)
     end
 
     def sid
@@ -68,12 +87,6 @@ module Getvideo
 
     def videoid
       @body["data"][0]["videoid"]
-    end
-
-    def response
-      uri = URI.parse(info_path)
-      http = Net::HTTP.new(uri.host, uri.port)
-      res = http.get(uri.path)
     end
 
     def parse_stream(type)

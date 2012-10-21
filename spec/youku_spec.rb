@@ -2,13 +2,25 @@ require 'spec_helper'
 
 describe Getvideo::Youku do
   let(:youku){ Getvideo::Youku.new("http://v.youku.com/v_show/id_XNDQ2MzE4MzMy.html") }
+  let(:youku_swf){ Getvideo::Youku.new "http://player.youku.com/player.php/sid/XNDQ2MzE4MzMy/v.swf"}
+  let(:youku_id){ Getvideo::Youku.new "XNDQ2MzE4MzMy"}
 
-  describe "#url" do
-    it{ youku.url.should == "http://v.youku.com/v_show/id_XNDQ2MzE4MzMy.html" }
+  describe "#html_url" do
+    it{ youku.html_url.should == "http://v.youku.com/v_show/id_XNDQ2MzE4MzMy.html" }
+  end
+
+  describe "#title" do
+    it{ youku.title.should match(/1/)}
   end
 
   describe "#id" do
-    it{ youku.id.should == "XNDQ2MzE4MzMy" }
+    context "when is html url" do
+      it{ youku.id.should == "XNDQ2MzE4MzMy" }
+    end
+
+    context "when is swf url" do
+      it{ youku_swf.id.should == "XNDQ2MzE4MzMy" }
+    end
   end
 
   describe "#cover" do
@@ -19,8 +31,9 @@ describe Getvideo::Youku do
     it { youku.flash.should ==  "http://player.youku.com/player.php/sid/XNDQ2MzE4MzMy/v.swf" }
   end
 
-  describe "#flv" do
-    it{ youku.flv.count.should equal(3) }
+  describe "#media" do
+    let(:youku){ Getvideo::Youku.new "http://v.youku.com/v_show/id_XNDYwNjU1NDky.html" }
+    it{ youku.media.count.should equal(3) }
   end
 
   describe "#m3u8" do
