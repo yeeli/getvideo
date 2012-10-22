@@ -45,7 +45,7 @@ module Getvideo
       if url =~ /\/(v|a|o|l)\/.*.\.swf/
         url
       elsif url =~ /\/(albumplay|listplay|oplay)/
-        url_type = url.scan(/\/((a)lbumplay|(l)istplay|(o)play)/)[0][1]
+        url_type = url.scan(/\/((a)lbumplay|(l)istplay|(o)play)/)[0].compact()[1]
         "http://www.tudou.com/#{url_type}/#{acode}/&rpid=116105338&resourceId=116105338_04_05_99&iid=#{iid}/v.swf"
       else
         "http://www.tudou.com/v/#{lcode}/&rpid=116105338&resourceId=116105338_04_05_99/v.swf"

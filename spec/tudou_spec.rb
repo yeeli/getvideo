@@ -109,6 +109,13 @@ describe Getvideo::Tudou do
       end
     end
 
+    describe "#flash" do
+      it "should return flash" do
+        tudou_l.flash.should == "http://www.tudou.com/l/ofVJWe0u0sI/&rpid=116105338&resourceId=116105338_04_05_99&iid=126315712/v.swf"
+        tudou_l2.flash.should == "http://www.tudou.com/l/ofVJWe0u0sI/&rpid=116105338&resourceId=116105338_04_05_99&iid=126330996/v.swf"
+      end
+    end
+   
   end
 
   context "when url type is oplay" do
