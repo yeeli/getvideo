@@ -18,7 +18,6 @@ module Getvideo
     end
 
     def id
-      #url.split("?")[1].split("&")[0].split("=")[1]
       if url =~ /(?:v=|youtu\.be\/|youtube\.com\/v\/)([^.|&]+)/
         url.scan(/(?:v=|youtu\.be\/|youtube\.com\/v\/)([^.|&]+)/)[0][0]
       else

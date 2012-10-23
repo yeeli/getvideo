@@ -23,8 +23,9 @@ describe Getvideo::Iqiyi do
   describe "#title" do
     it{ iqiyi.title.should match(/网络/)}
   end
+
   describe "#m3u8" do
-    it{ iqiyi.m3u8.should == "http://meta.video.qiyi.com/158/e5c6fe204412ee9b0f07e1cd62dba0cf.m3u8" }
+    it{ iqiyi.m3u8.should == "http://meta.video.qiyi.com/159/34dc7fb440538ee944ba76778d481b52.m3u8" }
   end
 
   describe "#flash" do
@@ -32,7 +33,7 @@ describe Getvideo::Iqiyi do
   end
 
   describe "#media" do
-    it{ iqiyi.media["ts"].count.should be(2) }
+    it{ iqiyi.media["mp4"].count.should be(1) }
   end
 
   describe "#cover" do

@@ -7,7 +7,9 @@ module Getvideo
     def initialize(uri)
       @url = uri
       @site = "http://cache.video.qiyi.com/v/"
+      @m_site = "http://cache.video.qiyi.com/m/"
       @body = Nokogiri::XML(response.body)
+      @m_body = JSON.parse parse_m.scan(/ipadUrl=([^*]+)/)[0][0]
     end
 
     def html_url
@@ -34,7 +36,7 @@ module Getvideo
     end
 
     def m3u8
-      @body.css("metaUrl").text[0..-4] + "m3u8"
+      @m_body["data"]["mtl"][1]["m3u"]
     end
 
     def flash
@@ -46,15 +48,24 @@ module Getvideo
 
     def media
       video_list = {}
+      video_list["mp4"] = []
+      video_list["mp4"] << parse_mp4
       video_list["ts"] = []
-      @body.css("file").each do |f|
-        video_list["ts"] << f.content[0..-4] + "ts"
+      file =  @body.css("file")
+      size = @body.css("size")
+      #meta = []
+      #meta_data = Nokogiri::XML Net::HTTP.get(URI.parse(@body.css("metaUrl").text))
+      #meta_data.css("filepositions").each do |m|
+      #  meta << m.children().last.text.gsub(/\d/,"9")
+      #end
+      file.zip(size).each do |f|
+        video_list["ts"] << f[0].content[0..-4] + "ts?start=0&end=99999999&hsize=" + f[1].text
       end
       return  video_list
     end
 
     def play_media
-      media["ts"]
+      media["mp4"]
     end
 
     def json
@@ -77,6 +88,22 @@ module Getvideo
       uri = URI.parse(info_path) 
       http= Net::HTTP.new(uri.host, uri.port)
       res = http.get(uri.path)
+    end
+
+    def m_info_path
+      info = @m_site + id + "/"
+    end
+
+    def parse_m
+      uri = URI.parse m_info_path
+      res = Net::HTTP.get uri
+    end
+
+    def parse_mp4(url=nil)
+      site = @m_body["data"]["mp4Url"]
+      uri = URI.parse site
+      res = Net::HTTP.get uri
+      res.scan(/"l":"([^,]+)"/)[0][0]
     end
 
     def parse_vid

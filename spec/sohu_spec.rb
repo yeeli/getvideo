@@ -6,6 +6,7 @@ describe Getvideo::Sohu do
   let(:sohu_swf){ Getvideo::Sohu.new("http://share.vrs.sohu.com/549836/v.swf&autoplay=false&xuid=") }
   let(:sohu_id){ Getvideo::Sohu.new("549836") }
   let(:sohu_my){ Getvideo::Sohu.new("http://my.tv.sohu.com/u/pw/5085302_1_3") }
+  let(:sohu_my_u){ Getvideo::Sohu.new("http://my.tv.sohu.com/u/vw/32845325") }
   let(:sohu_my_swf){ Getvideo::Sohu.new("http://share.vrs.sohu.com/my/v.swf&autoplay=false&id=32427841&skinNum=1&topBar=1&xuid=") }
   let(:sohu_my_id){ Getvideo::Sohu.new("32427841|my") }
   
@@ -21,6 +22,7 @@ describe Getvideo::Sohu do
     context "when is my.tv.sohu.com" do
       it "should return id" do
        sohu_my.id.should == "32427841" 
+       sohu_my_u.id.should == "32845325" 
        sohu_my_swf.id.should == "32427841" 
        sohu_my_id.id.should == "32427841" 
       end
@@ -40,11 +42,14 @@ describe Getvideo::Sohu do
   end
 
   describe "#flash" do
-    it{ sohu.flash.should ==  "http://share.vrs.sohu.com/my/v.swf&topBar=1&id=549836&autoplay=false" }
+    it "should return falsh" do 
+      sohu.flash.should ==  "http://share.vrs.sohu.com/549836/v.swf&autoplay=false" 
+      sohu_my.flash.should ==  "http://share.vrs.sohu.com/my/v.swf&topBar=1&id=32427841&autoplay=false" 
+    end
   end
 
   describe "m3u8" do
-    it{ sohu.m3u8.should ==  "http://my.tv.sohu.com/ipad/549836.m3u8" }
+    it{ sohu.m3u8.should ==  "http://hot.vrs.sohu.com/ipad549836.m3u8" }
   end
 
   describe "#media" do

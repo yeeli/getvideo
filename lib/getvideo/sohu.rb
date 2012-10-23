@@ -16,8 +16,10 @@ module Getvideo
    end
 
    def id
-     if url =~ /(\.shtml|my\.tv)/
+     if url =~ /(\.shtml|my\.tv.+\/u\/pw\/([^\D+]+))/
        parse_vid[1]
+     elsif url =~ /my\.tv.+\/u\/vw\/([^\D]+)/
+       u = url.scan(/my\.tv.+\/u\/vw\/([^\D]+)/)[0][0]
      elsif url =~ /v\.swf/
        url.scan(/(sohu\.com\/([^\D]+)\/v.swf|id=([^\D]+))/)[0].compact[1]
      elsif url =~ /\|my/
@@ -36,11 +38,19 @@ module Getvideo
    end
 
    def flash
-     "http://share.vrs.sohu.com/my/v.swf&topBar=1&id=#{id}&autoplay=false"
+     if url =~ /(my\.tv)/
+       "http://share.vrs.sohu.com/my/v.swf&topBar=1&id=#{id}&autoplay=false"
+     else
+       "http://share.vrs.sohu.com/#{id}/v.swf&autoplay=false"
+     end
    end
 
    def m3u8
-     "http://my.tv.sohu.com/ipad/#{id}.m3u8"
+     if url =~ /(my\.tv)/
+       "http://my.tv.sohu.com/ipad/#{id}.m3u8"
+     else
+       "http://hot.vrs.sohu.com/ipad#{id}.m3u8"
+     end
    end
 
    def media
@@ -97,7 +107,7 @@ module Getvideo
      page_uri = URI.parse(url)
      page_doc = Net::HTTP.new(page_uri.host, page_uri.port)
      page_res = page_doc.get(page_uri.path)
-     page_res.body.match(/vid=["|']?(\d+)["|']?/)
+     page_res.body.match(/vid[\s]*=[\s]*["|']?(\d+)["|']?/)
    end
   end
 end

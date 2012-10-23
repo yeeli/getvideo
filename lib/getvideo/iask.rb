@@ -58,7 +58,7 @@ module Getvideo
 
     def m3u8
       if has_html?
-        "http://v.iask.com/v_play_ipad.php?vid=#{ipad_id}" 
+        @ipad_body.nil? ? "" : media["mp4"][0] 
       else
         ""
       end
