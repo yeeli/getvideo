@@ -50,7 +50,7 @@ module Getvideo
     end
 
     def cover
-      @info.body.match(/pic\s*:\s*(\S+)/)[1].delete("\"")
+      @info.body.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
     end
 
     def flash
