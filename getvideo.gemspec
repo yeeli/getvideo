@@ -4,8 +4,8 @@ require File.expand_path('../lib/getvideo/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["ye.li"]
   gem.email         = ["ye@ono.li"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = "get video"
+  gem.summary       = "get video" 
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
