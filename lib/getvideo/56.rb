@@ -30,7 +30,7 @@ module Getvideo
     end
 
     def cover
-      @body["info"]["img"]
+      @body["info"]["bimg"]
     end
 
     def title
