@@ -30,11 +30,11 @@ module Getvideo
     end
 
     def cover
-      @body["info"]["bimg"]
+      @body["info"]["bimg"] if @body
     end
 
     def title
-      @body["info"]["Subject"]
+      @body["info"]["Subject"] if @body
     end
 
     def flash
@@ -42,13 +42,13 @@ module Getvideo
     end
 
     def m3u8
-      "http://vxml.56.com/m3u8/#{@body["info"]["vid"]}/"
+      "http://vxml.56.com/m3u8/#{@body["info"]["vid"]}/" if @body
     end
 
     def media
       video_list = {}
       @body["info"]["rfiles"].each do |f|
-        f_type = f["url"].scan(/\.(flv|mp4|m3u8)/)[0][0]
+        f_type = f["url"].scan(/\.(flv|mp4|m3u8)\?/)[0][0]
         if video_list[f_type].nil?
           video_list[f_type] = []
           video_list[f_type] << f["url"] 
