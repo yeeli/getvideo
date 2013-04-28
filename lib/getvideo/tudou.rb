@@ -70,7 +70,7 @@ module Getvideo
     end
 
     def m3u8
-      "http://m3u8.tdimg.com/#{iid[0,3]}/#{iid[3,3]}/#{iid[6,3]}/2.m3u8"
+      "http://vr.tudou.com/v2proxy/v2.m3u8?it=#{iid}&st=2&pw="
     end
 
     def media
