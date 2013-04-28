@@ -70,7 +70,7 @@ module Getvideo
    end
 
    def play_media
-     media["mp4"]
+     media["mp4"][0]
    end
 
     def json

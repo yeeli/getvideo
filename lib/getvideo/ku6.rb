@@ -53,7 +53,7 @@ module Getvideo
     end
 
     def play_media
-      media["f4v"]
+      media["f4v"][0]
     end
 
     def json
