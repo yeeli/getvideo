@@ -87,7 +87,7 @@ module Getvideo
     end
 
     def play_media
-      media["hlv"][0]
+      media["mp4"][0] if media["mp4"]
     end
 
     def json
