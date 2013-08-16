@@ -29,6 +29,16 @@ module Getvideo
       media["mp4"][0] if media["mp4"]
     end
 
+    def json
+      {id: id,
+       url: html_url,
+       cover: cover,
+       title: title,
+       m3u8: m3u8,
+       flash: flash,
+       media: play_media}.to_json
+    end
+
     class << self
       def set_api_uri(&block)
         return @api_uri unless block_given?
