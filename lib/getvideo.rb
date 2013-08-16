@@ -3,6 +3,8 @@ require 'uri'
 require 'cgi'
 require 'json'
 require 'nokogiri'
+require 'multi_json'
+require 'getvideo/video'
 require "getvideo/version"
 require "getvideo/youku"
 require "getvideo/ku6"

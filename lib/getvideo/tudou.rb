@@ -1,14 +1,14 @@
 #coding:utf-8
 
 module Getvideo
-  class Tudou
-    attr_accessor :url
+  class Tudou < Video
+    attr_reader :info
 
-    def initialize(uri)
-      @url = uri
-      @site = "http://v2.tudou.com/v"
-      @info = parse_html(html_url)
-      @body = Nokogiri::XML(response.body)
+    def initialize(url)
+      @url = url
+      parse_html
+      tudou_connect
+      @body = Nokogiri::XML(response)
     end
 
     def id
@@ -20,11 +20,11 @@ module Getvideo
        type = url.scan(/\/(a|o|l)\/.*.\.swf/)[0][0]
        case type
        when "a"
-        "http://www.tudou.com/albumplay/#{acode}/#{lcode}.html"
+        "http://www.tudou.com/albumplay/#{acode}#{"/" + lcode if lcode }.html"
        when "o"
-         "http://www.tudou.com/oplay/#{acode}/#{lcode}.html"
+         "http://www.tudou.com/oplay/#{acode}#{"/" + lcode if lcode}.html"
        when "l"
-         "http://www.tudou.com/listplay/#{acode}/#{lcode}.html"
+         "http://www.tudou.com/listplay/#{acode}#{"/" + lcode if lcode}.html"
        end
       elsif url =~ /dp\.tudou.com\/(a|o|l|v|albumplay|oplay|listplay)\//
         type = url.scan(/dp\.tudou.com\/(a|o|l|v|albumplay|oplay|listplay)\/.*.\.html/)[0][0]
@@ -50,7 +50,7 @@ module Getvideo
     end
 
     def cover
-      @info.body.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
+      @info.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
     end
 
     def flash
@@ -92,33 +92,14 @@ module Getvideo
       return video_list
     end
 
-    def play_media
-      media["f4v"][0] if media["f4v"]
-    end
-
-    def json
-      {id: id,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
-    end
-
-
-
     private
 
-    def info_path
-      @site + "?it=" + iid 
-    end
-
-    def response
-      uri = URI.parse info_path
+    def tudou_connect
+      uri = URI.parse "http://v2.tudou.com/v?it=#{iid}"
       http = Net::HTTP.new uri.host, uri.port
       req = Net::HTTP::Get.new(uri.request_uri,{"User-Agent"=> ""})
-      http.request req
+      res = http.request req
+      @response = res.body
     end
 
     def lcode
@@ -131,7 +112,8 @@ module Getvideo
       elsif url =~ /dp\.tudou\.com\/v\/([^.]+)\.html/
         url.scan(/dp\.tudou\.com\/v\/([^.]+)\.html/)[0][0]
       else
-        Nokogiri::XML(response.body).children()[0].attr("code")
+        tudou_connect
+        Nokogiri::XML(response).children()[0].attr("code")
       end
     end
 
@@ -169,13 +151,13 @@ module Getvideo
     end
 
     def get_iid
-      @info.body.scan(/iid\s*:\s*(\S+)/)
+      @info.scan(/iid\s*:\s*(\S+)/)
     end
 
-    def parse_html(v_url)
-      uri = URI.parse(v_url)
-      http = Net::HTTP.new(uri.host, uri.port) 
-      http.get(uri.path)
+    def parse_html
+      conn = Faraday.new
+      res = conn.get html_url
+      @info = res.body
     end
   end
 end

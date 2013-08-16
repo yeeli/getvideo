@@ -37,11 +37,11 @@ describe Getvideo::Tudou do
     end
 
     describe "#cover" do
-      it{ tudou_v.cover.should match(/tdimg/) }
+      it{ tudou_v.cover.should match(/tdimg|ykimg/) }
     end
 
     describe "#m3u8" do
-      it{ tudou_v.m3u8.should == "http://m3u8.tdimg.com/151/831/829/2.m3u8"  }
+      it{ tudou_v.m3u8.should == "http://vr.tudou.com/v2proxy/v2.m3u8?it=151831829&st=2&pw="  }
     end
 
     describe "#media" do
@@ -50,55 +50,54 @@ describe Getvideo::Tudou do
   end
 
   context "when url type is albumplay" do
-    let(:tudou_a){Getvideo::Tudou.new "http://www.tudou.com/albumplay/o8k8lTglGRw.html"}
+    let(:tudou_a){Getvideo::Tudou.new "http://www.tudou.com/albumplay/MgWfoV9cT4E.html"}
     #会跳转url
     let(:tudou_a1){Getvideo::Tudou.new "http://www.tudou.com/albumplay/1D9nGd3U0ks/WjNmtxWnbac.html"}
-    let(:tudou_a_swf){Getvideo::Tudou.new "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=64374265/v.swf"}
-    let(:tudou_a2){Getvideo::Tudou.new "http://www.tudou.com/albumplay/o8k8lTglGRw/rbt0q3crEgs.html"}
-    let(:tudou_a2_swf){Getvideo::Tudou.new "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=53568937/v.swf"}
-    let(:tudou_dp_a){Getvideo::Tudou.new "http://dp.tudou.com/a/o8k8lTglGRw.html"}
-    let(:tudou_dp_a2){Getvideo::Tudou.new "http://dp.tudou.com/a/o8k8lTglGRw/rbt0q3crEgs.html"}
+    let(:tudou_a_swf){Getvideo::Tudou.new "http://www.tudou.com/a/MgWfoV9cT4E/&resourceId=0_04_05_99&iid=131561214/v.swf"}
+    let(:tudou_a2){Getvideo::Tudou.new "http://www.tudou.com/albumplay/oYvFcu7I5YY/RO-yBcJdGws.html"}
+    let(:tudou_a2_swf){Getvideo::Tudou.new "http://www.tudou.com/a/oYvFcu7I5YY/&resourceId=0_04_05_99&iid=131561156/v.swf"}
+    let(:tudou_dp_a){Getvideo::Tudou.new "http://dp.tudou.com/a/MgWfoV9cT4E.html"}
+    let(:tudou_dp_a2){Getvideo::Tudou.new "http://dp.tudou.com/a/MgWfoV9cT4E/A49rc-hkUrY.html"}
 
     describe "#id" do
       it "should return id" do
-        tudou_a.id.should == "64374265"
-        tudou_a_swf.id.should == "64374265"
-        tudou_a2.id.should == "53568937"
-        tudou_a2_swf.id.should == "53568937"
-        tudou_dp_a.id.should == "64374265"
-        tudou_dp_a2.id.should == "53568937"
+        tudou_a_swf.id.should == "131561214"
+        tudou_a2.id.should == "131561156"
+        tudou_a2_swf.id.should == "131561156"
+        tudou_dp_a.id.should == "131561214"
+        tudou_dp_a2.id.should == "131561214"
       end
     end
 
     describe "#html_url" do
       it "should return id" do
-        tudou_a_swf.html_url.should == "http://www.tudou.com/albumplay/o8k8lTglGRw/t5Z2nRSE4yk.html"
-        tudou_a2_swf.html_url.should == "http://www.tudou.com/albumplay/o8k8lTglGRw/rbt0q3crEgs.html"
-        tudou_dp_a.html_url.should == "http://www.tudou.com/albumplay/o8k8lTglGRw.html"
-        tudou_dp_a2.html_url.should == "http://www.tudou.com/albumplay/o8k8lTglGRw/rbt0q3crEgs.html"
+        tudou_a_swf.html_url.should == "http://www.tudou.com/albumplay/MgWfoV9cT4E.html"
+        tudou_a2_swf.html_url.should == "http://www.tudou.com/albumplay/oYvFcu7I5YY.html"
+        tudou_dp_a.html_url.should == "http://www.tudou.com/albumplay/MgWfoV9cT4E.html"
+        tudou_dp_a2.html_url.should == "http://www.tudou.com/albumplay/MgWfoV9cT4E/A49rc-hkUrY.html"
       end
     end
 
     describe "#flash" do
       it "should return flash" do
-        tudou_a.flash.should == "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=64374265/v.swf"
-        tudou_a2.flash.should == "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=53568937/v.swf"
-        tudou_dp_a.flash.should == "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=64374265/v.swf"
-        tudou_dp_a2.flash.should == "http://www.tudou.com/a/o8k8lTglGRw/&rpid=116105338&resourceId=116105338_04_05_99&iid=53568937/v.swf"
+        tudou_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
+        tudou_a2.flash.should == "http://www.tudou.com/a/oYvFcu7I5YY/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561156/v.swf"
+        tudou_dp_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
+        tudou_dp_a2.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
       end
     end
     
     describe "#cover" do
       it "should return cover" do 
-        tudou_a.cover.should match(/tdimg/) 
-        tudou_a1.cover.should match(/tdimg/) 
+        tudou_a.cover.should match(/tdimg|ykimg/) 
+        tudou_a1.cover.should match(/tdimg|ykimg/) 
       end
     end
 
     describe "#media" do
       it "return media url" do
-        tudou_a.media["f4v"].count.should be(1)
-        tudou_a.media["flv"].count.should be(1)
+        tudou_a.media["f4v"].count.should be(0)
+        tudou_a.media["flv"].count.should be(0)
       end
     end
   end
@@ -113,11 +112,11 @@ describe Getvideo::Tudou do
 
     describe "#id" do
       it "should return id" do
-        tudou_l.id.should == "126315712"
+        tudou_l.id.should == "161629341"
         tudou_l_swf.id.should == "126315712"
         tudou_l2.id.should == "126330996"
         tudou_l2_swf.id.should == "126330996"
-        tudou_dp_l.id.should == "126315712"
+        tudou_dp_l.id.should == "161629341"
         tudou_dp_l2.id.should == "126330996"
       end
     end
@@ -131,7 +130,7 @@ describe Getvideo::Tudou do
 
     describe "#flash" do
       it "should return flash" do
-        tudou_l.flash.should == "http://www.tudou.com/l/ofVJWe0u0sI/&rpid=116105338&resourceId=116105338_04_05_99&iid=126315712/v.swf"
+        tudou_l.flash.should == "http://www.tudou.com/l/ofVJWe0u0sI/&rpid=116105338&resourceId=116105338_04_05_99&iid=161629341/v.swf"
         tudou_l2.flash.should == "http://www.tudou.com/l/ofVJWe0u0sI/&rpid=116105338&resourceId=116105338_04_05_99&iid=126330996/v.swf"
       end
     end
@@ -139,24 +138,18 @@ describe Getvideo::Tudou do
   end
 
   context "when url type is oplay" do
-    let(:tudou_o){Getvideo::Tudou.new "http://www.tudou.com/oplay/zfHEUbMXwr0.html"}
-    let(:tudou_o_swf){Getvideo::Tudou.new "http://www.tudou.com/o/zfHEUbMXwr0/&rpid=116105338&resourceId=116105338_04_0_99&iid=143085669/v.swf"}
-    let(:tudou_o2){Getvideo::Tudou.new "http://www.tudou.com/oplay/zfHEUbMXwr0/n4ZwfsvJ2Wk.html"}
-    let(:tudou_o2_swf){Getvideo::Tudou.new "http://www.tudou.com/o/zfHEUbMXwr0/&rpid=116105338&resourceId=116105338_04_0_99&iid=143085669/v.swf"}
-    let(:tudou_dp_o){Getvideo::Tudou.new "http://dp.tudou.com/o/zfHEUbMXwr0.html"}
-    let(:tudou_dp_o2){Getvideo::Tudou.new "http://dp.tudou.com/o/zfHEUbMXwr0/n4ZwfsvJ2Wk.html"}
+    let(:tudou_o){Getvideo::Tudou.new "http://www.tudou.com/oplay/6jo2_Ep6Jbg.html"}
+    let(:tudou_o_swf){Getvideo::Tudou.new "http://www.tudou.com/o/6jo2_Ep6Jbg/&resourceId=0_04_05_99&iid=130441856/v.swf"}
+    let(:tudou_o2){Getvideo::Tudou.new "http://www.tudou.com/oplay/6jo2_Ep6Jbg/pJKf69qZMyQ.html"}
+    let(:tudou_o2_swf){Getvideo::Tudou.new "http://www.tudou.com/o/6jo2_Ep6Jbg/&resourceId=0_04_05_99&iid=130441856/v.swf"}
 
     describe "#id" do
       it "should return id" do
-        tudou_o.id.should == "143085669"
-        tudou_o_swf.id.should == "143085669"
-        tudou_o2.id.should == "143085669"
-        tudou_o2_swf.id.should == "143085669"
-        tudou_dp_o.id.should == "143085669"
-        tudou_dp_o2.id.should == "143085669"
+        tudou_o.id.should == "130441856"
+        tudou_o_swf.id.should == "130441856"
+        tudou_o2.id.should == "130441856"
+        tudou_o2_swf.id.should == "130441856"
       end
     end
-
-
   end
 end

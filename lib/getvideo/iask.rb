@@ -1,16 +1,17 @@
 #coding:utf-8
 
 module Getvideo
-  class Iask
-    attr_accessor :url
-    def initialize(uri)
-      @url = uri
-      @site = "http://v.iask.com/v_play.php"
-      get_id()
-      @body = Nokogiri::XML(response)
+  class Iask < Video
+    set_api_uri { "http://v.iask.com/v_play.php?vid=#{id}" }
+    attr_reader :ipad_response, :info_response
+
+    def initialize(url)
+      @url = url
+      set_id()
+      connection
       if has_html?
-        @info = Nokogiri::HTML(parse_html).css("head script").text.gsub(" ", "")
-        @ipad_body = Nokogiri::XML(response("ipad")) if ipad_id
+        @info_response = Nokogiri::HTML(parse_html).css("head script").text.gsub(" ", "")
+        ipad_connect if ipad_id
       end
     end
 
@@ -28,15 +29,15 @@ module Getvideo
 
     def title
       if has_html?
-        @info.scan(/title:'([^']+)'/)[0][0]
+        info_response.scan(/title:'([^']+)'/)[0][0]
       else
-        @body.css("vname").text
+        response.css("vname").text
       end
     end
 
     def cover
       if has_html?
-        pic = @info.scan(/pic:'([^']+)'/)
+        pic = info_response.scan(/pic:'([^']+)'/)
         pic.empty? ? "" : pic[0][0]
       else
         ""
@@ -47,7 +48,7 @@ module Getvideo
       if url =~ /\.swf/
         url
       else
-        flash_url = @info.scan(/swfOutsideUrl:'([^']+)'/)
+        flash_url = info_response.scan(/swfOutsideUrl:'([^']+)'/)
         unless flash_url.empty?
           flash_url[0][0]
         else
@@ -58,7 +59,7 @@ module Getvideo
 
     def m3u8
       if has_html?
-        @ipad_body.nil? ? "" : media["mp4"][0] 
+        ipad_response.nil? ? "" : media["mp4"][0] 
       else
         ""
       end
@@ -72,33 +73,18 @@ module Getvideo
       vedio_list = {}
       vedio_list["hlv"] = []
 
-      @body.css("url").each do |d|
+      response.css("url").each do |d|
         vedio_list["hlv"] << d.text
       end
 
-      if @ipad_body
+      if ipad_response
         vedio_list["mp4"] = []
-        @ipad_body.css("url").each do |d|
+        ipad_response.css("url").each do |d|
           vedio_list["mp4"] << d.text
         end
       end
 
       return vedio_list
-    end
-
-    def play_media
-      media["mp4"][0] if media["mp4"]
-    end
-
-    def json
-      vid = @id + "|" + @uid
-      {id: vid,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
     end
 
     private
@@ -107,7 +93,7 @@ module Getvideo
       @uid =~ /[\d]{3,}?/ || (url =~ /\.html/)
     end
 
-    def get_id
+    def set_id
       if url =~ /\/v\/b\/([^\D]+)-([^\D]+)\.html/
         ids =  url.scan(/\/v\/b\/([^\D]+)-([^\D]+)\.html/)[0]
         @id = ids[0]
@@ -139,19 +125,14 @@ module Getvideo
     end
 
     def ipad_id
-      ipad_ids = @info.scan(/videoData:{ipad_vid:[']?([^\D]+)[']?/)
+      ipad_ids = info_response.scan(/videoData:{ipad_vid:[']?([^\D]+)[']?/)
       ipad_ids.empty? ? nil : ipad_ids[0][0]
     end
 
-    def info_path(l_id = nil)
-      vid = l_id.nil? ? id : l_id
-      @site + "?vid=" + vid 
-    end
-
-    def response(type = nil)
-      vid = ipad_id if type == "ipad"
-      uri = URI.parse(info_path(vid))
-      res = Net::HTTP.get(uri)
+    def ipad_connect
+      conn = Faraday.new
+      response = conn.get "http://v.iask.com/v_play.php?vid=#{ipad_id}"
+      @ipad_response = Response.new(response).parsed
     end
 
     def html_info_path
@@ -172,23 +153,21 @@ module Getvideo
       end
     end
 
-
     def parse_html()
-      uri = URI.parse(html_info_path)
-      body = Net::HTTP.get(uri)
+      conn = Faraday.new
+      conn.get(html_info_path).body
     end
-
 
     def get_media(type=nil)
       if type == "mp4"
         if ipad_id
-          uri = URI.parse("#{@site}?vid=#{ipad_id}")
+          uri = "http://v.iask.com/v_play.php?vid=#{ipad_id}"
         end
       else
-        uri = URI.parse("#{@site}?vid=#{id}")
+        uri = "http://v.iask.com/v_play.php?vid=#{id}"
       end
-      res = Net::HTTP.get(uri)
-      return res
+      conn = Faraday.new
+      return conn.get(uri).body
     end
   end
 end

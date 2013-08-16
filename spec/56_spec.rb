@@ -33,7 +33,7 @@ describe Getvideo::Wole do
   end
 
   describe "#cover" do
-    it{ wole.cover.should match(/v19.56.com/) }
+    it{ wole.cover.should match(/v19.56img.com/) }
   end
 
   describe "#flash" do

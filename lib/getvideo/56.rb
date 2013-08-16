@@ -1,14 +1,8 @@
 #coding:utf-8
 
 module Getvideo 
-  class Wole
-    attr_reader :url
-
-    def initialize(uri)
-      @url = uri
-      @site = "http://vxml.56.com/json/" 
-      @body = JSON.parse(response)
-    end
+  class Wole < Video
+    set_api_uri { "http://vxml.56.com/json/#{id}/?src=site" }
 
     def html_url
       if url =~ /v_([^.]+).html/
@@ -30,11 +24,11 @@ module Getvideo
     end
 
     def cover
-      @body["info"]["bimg"] if @body
+      response["info"]["bimg"] if response
     end
 
     def title
-      @body["info"]["Subject"] if @body
+      response["info"]["Subject"] if response
     end
 
     def flash
@@ -42,12 +36,12 @@ module Getvideo
     end
 
     def m3u8
-      "http://vxml.56.com/m3u8/#{@body["info"]["vid"]}/" if @body
+      "http://vxml.56.com/m3u8/#{response["info"]["vid"]}/" if response
     end
 
     def media
       video_list = {}
-      @body["info"]["rfiles"].each do |f|
+      response["info"]["rfiles"].each do |f|
         f_type = f["url"].scan(/\.(flv|mp4|m3u8)\?/)[0][0]
         if video_list[f_type].nil?
           video_list[f_type] = []
@@ -61,29 +55,6 @@ module Getvideo
 
     def play_media
       media["mp4"][0] if media["mp4"]
-    end
-
-    def json
-      {id: id,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
-    end
-
-    private
-
-    def info_path
-      @site + id + "/?src=site"
-    end
-
-    def response
-      uri = URI.parse info_path
-      http = Net::HTTP.new(uri.host, uri.port)
-      res = http.get(uri.path)
-      res.body
     end
   end
 end

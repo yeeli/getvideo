@@ -25,7 +25,7 @@ describe Getvideo::Iqiyi do
   end
 
   describe "#m3u8" do
-    it{ iqiyi.m3u8.should == "http://meta.video.qiyi.com/159/34dc7fb440538ee944ba76778d481b52.m3u8" }
+    it{ iqiyi.m3u8.should == "http://meta.video.qiyi.com/161/2d67f7aa72fe95ee65d36ca7ceabb69e.m3u8" }
   end
 
   describe "#flash" do

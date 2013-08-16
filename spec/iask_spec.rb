@@ -25,7 +25,7 @@ describe Getvideo::Iask do
 
   describe "#flash" do
     it "should return flash url" do
-      iask.flash.should == "http://you.video.sina.com.cn/api/sinawebApi/outplayrefer.php/vid=87948161_2162799562_PE+1GCBtBjbK+l1lHz2stqkP7KQNt6nniGy2vFutIAhbQ0/XM5GRZdQD6CjQAdkEqDhATJ82cfYn0Rw/s.swf"
+      iask.flash.should == "http://you.video.sina.com.cn/api/sinawebApi/outplayrefer.php/vid=87948161_2162799562_aEPhGCo5BjTK+l1lHz2stqlF+6xCpv2xhGi1vVCjLAdcUw6YJMXNb9UA6S3eAclD5yoUEJU3cvci3xwraQ/s.swf"
       iask_noflash.flash.should be_empty()
     end
   end

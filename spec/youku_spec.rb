@@ -42,6 +42,6 @@ describe Getvideo::Youku do
   end
 
   describe "#m3u8" do
-    it{ youku.m3u8.should == "http://v.youku.com/player/getM3U8/vid/111579583/type/flv/ts/#{Time.now.to_i}/v.m3u8"  }
+    it{ youku.m3u8.should == "http://v.youku.com/player/getM3U8/vid/111579583/type/flv/ts/v.m3u8"  }
   end
 end

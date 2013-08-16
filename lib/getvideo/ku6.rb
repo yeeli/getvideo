@@ -1,14 +1,7 @@
 #coding:utf-8
 
 module Getvideo
-  class Ku6
-    attr_accessor :url
-    def initialize(uri)
-      @url = uri
-      @site = "http://v.ku6.com/fetch.htm"
-      @body = JSON.parse(response.body)
-    end
-
+  class Ku6 < Video
     def html_url
       if url =~ /\.html/
         url
@@ -18,7 +11,7 @@ module Getvideo
     end
 
     def title
-      @body["data"]["t"]
+      response["data"]["t"]
     end
 
     def id
@@ -32,7 +25,7 @@ module Getvideo
     end
 
     def cover
-      @body["data"]["bigpicpath"]
+      response["data"]["bigpicpath"]
     end
 
     def flash
@@ -46,32 +39,18 @@ module Getvideo
     def media
       video_list = {}
       video_list["f4v"] = []
-      @body["data"]["f"].split(",").each do |f|
+      response["data"]["f"].split(",").each do |f|
         video_list["f4v"] << f
       end
       return video_list
     end
 
-    def play_media
-      media["f4v"][0] if media["f4v"]
-    end
-
-    def json
-      {id: id,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
-    end
-
     private
 
-    def response
-      uri = URI.parse(@site)
-      res = Net::HTTP.post_form(uri, {"t" => "getVideo4Player", "vid" => id})
-      return res
+    def connection
+      conn = Faraday.new
+      response= conn.post "http://v.ku6.com/fetch.htm", {"t" => "getVideo4Player", "vid" => id} 
+      @response = Response.new(response).parsed
     end
   end
 end

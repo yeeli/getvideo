@@ -1,13 +1,7 @@
 #coding:utf-8
 
 module Getvideo
-  class Youtube
-    attr_accessor :url
-    def initialize(uri)
-      @url = uri
-      @site = "http://www.youtube.com/get_video_info"
-      @body =response.body
-    end
+  class Youtube < Video
 
     def html_url
       if url =~ /(?:v=|youtu\.be\/)/
@@ -26,7 +20,7 @@ module Getvideo
     end
 
     def cover
-      CGI::unescape(@body.scan(/thumbnail_url=([^&]+)/)[0][0]).gsub("default.jpg","")+"0.jpg"
+      CGI::unescape(response.scan(/thumbnail_url=([^&]+)/)[0][0]).gsub("default.jpg","")+"0.jpg"
     end
 
     def flash
@@ -38,7 +32,7 @@ module Getvideo
     end
 
     def media
-      stream = CGI::unescape(@body.scan(/url_encoded_fmt_stream_map=([^&]+)/)[0][0])
+      stream = CGI::unescape(response.scan(/url_encoded_fmt_stream_map=([^&]+)/)[0][0])
       media = stream.scan(/url=([^&]+)/)
       sig = stream.scan(/sig=([^&]+)/)
       type = stream.scan(/type=([^&]+)/)
@@ -56,35 +50,16 @@ module Getvideo
       return vedio_list
     end
 
-    def play_media
-      media["mp4"][0]
-    end
-
     def title
-      CGI::unescape @body.scan(/title=([^&]+)/)[0][0]
+      CGI::unescape response.scan(/title=([^&]+)/)[0][0]
     end
-
-    def json
-      {id: id,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
-    end
-
-
 
     private
 
-    def info_path
-      @site 
-    end
-
-    def response
-      uri = URI.parse(info_path)
-      res = Net::HTTP.post_form(uri, { "video_id" => id })
+    def connection
+      conn = Faraday.new
+      res = conn.post "http://www.youtube.com/get_video_info", { "video_id" => id }
+      @response = Response.new(res).body
     end
   end
 end
