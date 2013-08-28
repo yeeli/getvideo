@@ -3,7 +3,7 @@ require File.expand_path('../lib/getvideo/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["ye.li"]
-  gem.email         = ["ye@ono.li"]
+  gem.email         = ["yeeli@outlook.com"]
   gem.description   = "get video"
   gem.summary       = "get video" 
   gem.homepage      = ""
@@ -14,4 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "getvideo"
   gem.require_paths = ["lib"]
   gem.version       = Getvideo::VERSION
+  gem.add_dependency 'faraday'
+  gem.add_dependency 'multi_json'
+  gem.add_dependency 'nokogiri'
 end
