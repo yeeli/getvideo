@@ -1,5 +1,9 @@
 #coding:utf-8
-require 'faraday'
+begin
+  require 'faraday'
+rescue LoadError
+  raise "You don't have the 'faraday' gem installed"
+end
 
 module Getvideo
   class Video
@@ -31,12 +35,12 @@ module Getvideo
 
     def json
       {id: id,
-       url: html_url,
-       cover: cover,
-       title: title,
-       m3u8: m3u8,
-       flash: flash,
-       media: play_media}.to_json
+        url: html_url,
+        cover: cover,
+        title: title,
+        m3u8: m3u8,
+        flash: flash,
+        media: play_media}.to_json
     end
 
     class << self
