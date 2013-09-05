@@ -49,8 +49,8 @@ module Getvideo
 
     def connection
       conn = Faraday.new
-      response= conn.post "http://v.ku6.com/fetch.htm", {"t" => "getVideo4Player", "vid" => id} 
-      @response = Response.new(response).parsed
+      response= conn.post "http://v.ku6.com/fetch.htm", {"t" => "getVideo4Player", "vid" => id}
+      Response.new(response).parsed
     end
   end
 end

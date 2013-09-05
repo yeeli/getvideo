@@ -2,13 +2,21 @@
 
 module Getvideo
   class Tudou < Video
-    attr_reader :info
 
     def initialize(url)
       @url = url
-      parse_html
-      tudou_connect
-      @body = Nokogiri::XML(response)
+    end
+
+    def response
+      @response ||= tudou_connect
+    end
+
+    def xml_response
+      @xml_response = Nokogiri::XML(response)
+    end
+
+    def info
+      @info ||= parse_html
     end
 
     def id
@@ -46,11 +54,11 @@ module Getvideo
     end
 
     def title
-      @body.children()[0].attr("title")
+      xml_response.children()[0].attr("title")
     end
 
     def cover
-      @info.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
+      info.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
     end
 
     def flash
@@ -78,7 +86,7 @@ module Getvideo
       video_list["f4v"] = []
       video_list["flv"] = []
       old_brt = ""
-      @body.css("f").each do | file |
+      xml_response.css("f").each do | file |
       brt = file.attr("brt")
       if brt != old_brt
         if file.content =~ /f4v/
@@ -99,7 +107,7 @@ module Getvideo
       http = Net::HTTP.new uri.host, uri.port
       req = Net::HTTP::Get.new(uri.request_uri,{"User-Agent"=> ""})
       res = http.request req
-      @response = res.body
+      res.body
     end
 
     def lcode
@@ -151,13 +159,11 @@ module Getvideo
     end
 
     def get_iid
-      @info.scan(/iid\s*:\s*(\S+)/)
+      info.scan(/iid\s*:\s*(\S+)/)
     end
 
     def parse_html
-      conn = Faraday.new
-      res = conn.get html_url
-      @info = res.body
+      Faraday.get(html_url).body
     end
   end
 end

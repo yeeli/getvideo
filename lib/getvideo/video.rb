@@ -7,18 +7,19 @@ end
 
 module Getvideo
   class Video
-    attr_reader :url, :response
+    attr_reader :url
 
     def initialize(url)
       @url = url
-      connection
+    end
+
+    def response
+      @response ||= connection
     end
 
     def connection
       api_url = self.class.get_api_uri(self)
-      conn = Faraday.new
-      response= conn.get api_url 
-      @response = Response.new(response).parsed
+      Response.new(Faraday.get(api_url)).parsed
     end
 
     def id; end
@@ -58,6 +59,10 @@ module Getvideo
   class Response
     attr_reader :response
 
+    def initialize(response)
+      @response = response
+    end
+
     CONTENT_TYPE = {
       'application/json' => :json,
       'application/x-www-form-urlencoded' => :html,
@@ -72,10 +77,6 @@ module Getvideo
       :xml => lambda{ |body| Nokogiri::XML(body) }
     }
 
-    def initialize(response)
-      @response = response
-    end
-
     def headers
       response.headers
     end
@@ -85,12 +86,12 @@ module Getvideo
     end
 
     def decode(body)
-      return '' if !body 
+      return '' if !body
       return body if json?
       charset = body.match(/charset\s*=[\s|\W]*([\w-]+)/)
       if charset[1].downcase != "utf-8"
         begin
-          body.encode! "utf-8", charset[1], {:invalid => :replace} 
+          body.encode! "utf-8", charset[1], {:invalid => :replace}
         rescue
           body
         end
@@ -113,7 +114,7 @@ module Getvideo
 
     def parser
       type = CONTENT_TYPE[content_type]
-      type = :json if type == :html && !response.body.match(/\<html/) 
+      type = :json if type == :html && !response.body.match(/\<html/)
       return type
     end
 

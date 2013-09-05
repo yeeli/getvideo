@@ -3,16 +3,18 @@
 module Getvideo
   class Iask < Video
     set_api_uri { "http://v.iask.com/v_play.php?vid=#{id}" }
-    attr_reader :ipad_response, :info_response
 
     def initialize(url)
       @url = url
-      set_id()
-      connection
-      if has_html?
-        @info_response = Nokogiri::HTML(parse_html).css("head script").text.gsub(" ", "")
-        ipad_connect if ipad_id
-      end
+      set_id
+    end
+
+    def ipad_response
+      @ipad_response ||= ipad_connect
+    end
+
+    def info_response
+      @info_response ||= Nokogiri::HTML(parse_html).css("head script").text.gsub(" ", "")
     end
 
     def html_url
@@ -59,7 +61,7 @@ module Getvideo
 
     def m3u8
       if has_html?
-        ipad_response.nil? ? "" : media["mp4"][0] 
+        ipad_response.nil? ? "" : media["mp4"][0]
       else
         ""
       end
@@ -97,16 +99,16 @@ module Getvideo
       if url =~ /\/v\/b\/([^\D]+)-([^\D]+)\.html/
         ids =  url.scan(/\/v\/b\/([^\D]+)-([^\D]+)\.html/)[0]
         @id = ids[0]
-        @uid = ids[1] 
+        @uid = ids[1]
       elsif url =~ /\/playlist\/([^\D]+).*.#([^\D]+)/
         ids = url.scan(/\/playlist\/[^\D]+-([^\D]+).*#([^\D]+)/)[0]
         @id = ids[1]
-        @uid = ids[0] 
+        @uid = ids[0]
       elsif url =~ /\.swf/
         ids = url.scan(/vid=([^\D]+)_([^\D]+)_.+\.swf/)[0]
         @id = ids[0]
-        @uid = ids[1] 
-      elsif url =~ /(\/[\S]?\/)/ 
+        @uid = ids[1]
+      elsif url =~ /(\/[\S]?\/)/
         if url.index("#").nil?
           html = parse_html
           ids = html.scan(/vid[\s]?:[\s]?['|"]([^\D]+)['|"]/)[0]
@@ -132,7 +134,7 @@ module Getvideo
     def ipad_connect
       conn = Faraday.new
       response = conn.get "http://v.iask.com/v_play.php?vid=#{ipad_id}"
-      @ipad_response = Response.new(response).parsed
+      Response.new(response).parsed
     end
 
     def html_info_path
@@ -144,7 +146,7 @@ module Getvideo
             url
           end
         else
-          url 
+          url
         end
       elsif url =~ /\.swf/
         html_url
@@ -153,7 +155,7 @@ module Getvideo
       end
     end
 
-    def parse_html()
+    def parse_html
       conn = Faraday.new
       conn.get(html_info_path).body
     end
