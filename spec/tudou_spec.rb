@@ -64,7 +64,7 @@ describe Getvideo::Tudou do
         tudou_a_swf.id.should == "131561214"
         tudou_a2.id.should == "131561156"
         tudou_a2_swf.id.should == "131561156"
-        tudou_dp_a.id.should == "131561214"
+        tudou_dp_a.id.should == "131532821"
         tudou_dp_a2.id.should == "131561214"
       end
     end
@@ -80,9 +80,9 @@ describe Getvideo::Tudou do
 
     describe "#flash" do
       it "should return flash" do
-        tudou_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
+        tudou_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131532821/v.swf"
         tudou_a2.flash.should == "http://www.tudou.com/a/oYvFcu7I5YY/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561156/v.swf"
-        tudou_dp_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
+        tudou_dp_a.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131532821/v.swf"
         tudou_dp_a2.flash.should == "http://www.tudou.com/a/MgWfoV9cT4E/&rpid=116105338&resourceId=116105338_04_05_99&iid=131561214/v.swf"
       end
     end
@@ -145,7 +145,7 @@ describe Getvideo::Tudou do
 
     describe "#id" do
       it "should return id" do
-        tudou_o.id.should == "130441856"
+        tudou_o.id.should == "131649672"
         tudou_o_swf.id.should == "130441856"
         tudou_o2.id.should == "130441856"
         tudou_o2_swf.id.should == "130441856"

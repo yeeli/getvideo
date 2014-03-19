@@ -38,8 +38,11 @@ module Getvideo
        when "v"
          "http://www.tudou.com/programs/view/#{lcode}/"
        end
-      elsif url =~ /www\.tudou.com\/(programs|albumplay|listplay|oplay)/
+      elsif url =~ /www\.tudou.com\/(programs|albumplay|listplay)/
         url
+      elsif url =~ /www\.tudou.com\/oplay/
+         url_id = url.match(/www\.tudou.com\/oplay\/(.*.).html/)[1]
+        "http://www.tudou.com/albumplay/#{url_id}.html"
       else
         "http://www.tudou.com/programs/view/#{lcode}/"
       end
@@ -95,7 +98,7 @@ module Getvideo
     private
 
     def tudou_connect
-      uri = URI.parse "http://v2.tudou.com/v?it=#{iid}"
+      uri = URI.parse "http://ct.v2.tudou.com/f?id=#{iid}"
       http = Net::HTTP.new uri.host, uri.port
       req = Net::HTTP::Get.new(uri.request_uri,{"User-Agent"=> ""})
       res = http.request req
