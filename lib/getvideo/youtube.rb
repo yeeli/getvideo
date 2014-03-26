@@ -38,7 +38,7 @@ module Getvideo
       type = stream.scan(/type=([^&]+)/)
       vedio_list = {}
       media.zip(sig, type).each do |m|
-        m_type = m[2][0].match(/(flv|mp4|webm|3gp)/)[0] 
+        m_type = m[2][0].match(/(flv|mp4|webm|3gp)/)[0]
         u = CGI::unescape(m[0][0])+ "&signature=" + m[1][0]
         if vedio_list[m_type].nil?
           vedio_list[m_type] = []
@@ -59,7 +59,7 @@ module Getvideo
     def connection
       conn = Faraday.new
       res = conn.post "http://www.youtube.com/get_video_info", { "video_id" => id }
-      @response = Response.new(res).body
+      Response.new(res).body
     end
   end
 end

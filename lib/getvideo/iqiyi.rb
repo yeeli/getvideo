@@ -3,11 +3,9 @@
 module Getvideo
   class Iqiyi < Video
     set_api_uri { "http://cache.video.qiyi.com/v/#{id}" }
-    attr_reader :ipad_response
 
-    def initialize(url)
-      super
-      ipad_connection
+    def ipad_response
+      @ipad_response ||= ipad_connection
     end
 
     def html_url
@@ -61,7 +59,7 @@ module Getvideo
     def ipad_connection
       conn = Faraday.new
       response= conn.get "http://cache.video.qiyi.com/m/#{id}/"
-      @ipad_response = MultiJson.load response.body.scan(/ipadUrl=([^*]+)/)[0][0]
+      MultiJson.load response.body.scan(/ipadUrl=([^*]+)/)[0][0]
     end
 
     def parse_mp4(url=nil)
