@@ -39,7 +39,10 @@ module Getvideo
       vedio_list = {}
       media.zip(sig, type).each do |m|
         m_type = m[2][0].match(/(flv|mp4|webm|3gp)/)[0]
-        u = CGI::unescape(m[0][0])+ "&signature=" + m[1][0]
+        u = CGI::unescape(m[0][0])
+        if m[1]
+          u += "&signature=" + m[1][0]
+        end
         if vedio_list[m_type].nil?
           vedio_list[m_type] = []
           vedio_list[m_type] << u

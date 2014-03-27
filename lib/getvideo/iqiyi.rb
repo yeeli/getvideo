@@ -9,25 +9,25 @@ module Getvideo
     end
 
     def html_url
-      response.css("videoUrl").text
+      response_info["videoUrl"]
     end
 
     def id
-     if url =~ /\.html/
-       parse_vid[1]
-     elsif url =~ /swf/
-       url.scan(/com\/([^\/]+)/)[0][0]
-     else
+      if url =~ /\.html/
+        parse_vid[1]
+      elsif url =~ /swf/
+        url.scan(/com\/([^\/]+)/)[0][0]
+      else
         url
-     end
+      end
     end
 
     def title
-      response.css("title").text
+      response_info["title"]
     end
 
     def cover
-      response.css("albumImage").text
+      response_info["albumImage"]
     end
 
     def m3u8
@@ -35,21 +35,24 @@ module Getvideo
     end
 
     def flash
-     position = response.css("logoPosition").text
-     duration = response.css("totalDuration").text
-     video_url =  response.css("videoUrl").text.gsub("http://www.iqiyi.com/","")
-     "http://player.video.qiyi.com/#{id}/#{position}/#{duration}/#{video_url}"[0..-5]+"swf"
+      position = response_info["logoPosition"]
+      duration = response_info["totalDuration"]
+      video_url =  response_info["videoUrl"].gsub("http://www.iqiyi.com/","")
+      "http://player.video.qiyi.com/#{id}/#{position}/#{duration}/#{video_url}"[0..-5]+"swf"
     end
 
     def media
       video_list = {}
       video_list["mp4"] = []
-      video_list["mp4"] << parse_mp4
-      video_list["ts"] = []
-      file =  response.css("file")
-      size = response.css("size")
-      file.zip(size).each do |f|
-        video_list["ts"] << f[0].content[0..-4] + "ts?start=0&end=99999999&hsize=" + f[1].text
+      video_list["f4v"] = []
+      mp4_file = ipad_response["data"]["mp4Url"]
+      res  = Faraday.get "http://data.video.qiyi.com/#{mp4_file.split("/")[-1].split(".")[0]}.ts"
+      video_list["mp4"] << "#{mp4_file}?#{URI.parse(res["location"]).query}"
+      file = response_info["fileUrl"]["file"]
+      size = response_info["fileBytes"]["size"]
+      file.each_with_index do |f, i|
+        res  = Faraday.get "http://data.video.qiyi.com/#{file[i].split("/")[-1].split(".")[0]}.ts"
+        video_list["f4v"] << "#{f}?#{URI.parse(res["location"]).query}"
       end
       return  video_list
     end
@@ -57,22 +60,20 @@ module Getvideo
     private
 
     def ipad_connection
-      conn = Faraday.new
-      response= conn.get "http://cache.video.qiyi.com/m/#{id}/"
+      conn = Faraday.new "http://cache.video.qiyi.com"
+      conn.headers["User-Agent"] = ""
+      response= conn.get "/m/#{id}/"
       MultiJson.load response.body.scan(/ipadUrl=([^*]+)/)[0][0]
-    end
-
-    def parse_mp4(url=nil)
-      site = ipad_response["data"]["mp4Url"]
-      conn = Faraday.new
-      res = conn.get(site)
-      res.body.scan(/"l":"([^,]+)"/)[0][0]
     end
 
     def parse_vid
       conn = Faraday.new
       page_res = conn.get(url)
       return page_res.body.match(/data-player-videoid\s*[:=]\s*["']([^"']+)["']/)
+    end
+
+    def response_info
+      response["root"]["video"]
     end
   end
 end

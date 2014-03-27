@@ -1,7 +1,7 @@
 #coding:utf-8
 
 module Getvideo
-  class Iask < Video
+  class Sina < Video
     set_api_uri { "http://v.iask.com/v_play.php?vid=#{id}" }
 
     def initialize(url)
@@ -33,7 +33,7 @@ module Getvideo
       if has_html?
         info_response.scan(/title:'([^']+)'/)[0][0]
       else
-        response.css("vname").text
+        response["vname"]
       end
     end
 
@@ -61,7 +61,9 @@ module Getvideo
 
     def m3u8
       if has_html?
-        ipad_response.nil? ? "" : media["mp4"][0]
+        if !ipad_response.nil? 
+          media["mp4"][0]
+        end
       else
         ""
       end
@@ -74,15 +76,16 @@ module Getvideo
     def media
       vedio_list = {}
       vedio_list["hlv"] = []
-
-      response.css("url").each do |d|
-        vedio_list["hlv"] << d.text
+      vedio_list["mp4"] = []
+      if res = response
+        if res["video"]["result"] != "error"
+          vedio_list["hlv"] << res["video"]["durl"]["url"]
+        end
       end
 
-      if ipad_response
-        vedio_list["mp4"] = []
-        ipad_response.css("url").each do |d|
-          vedio_list["mp4"] << d.text
+      if m_res = ipad_response
+        if m_res["video"]["result"] != "error"
+          vedio_list["mp4"] << m_res["vdieo"]["durl"]["url"]
         end
       end
 
@@ -156,8 +159,10 @@ module Getvideo
     end
 
     def parse_html
-      conn = Faraday.new
-      conn.get(html_info_path).body
+      if !html_info_path.empty?
+        conn = Faraday.new
+        conn.get(html_info_path).body
+      end
     end
 
     def get_media(type=nil)

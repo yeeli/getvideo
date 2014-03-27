@@ -3,170 +3,299 @@
 module Getvideo
   class Tudou < Video
 
+    set_api_uri do
+      if url_type == "albumplay" || url_type == "oplay"
+        "http://v.youku.com/player/getPlayList/VideoIDS/#{page_get_vcode}"
+      else
+        "http://www.tudou.com/outplay/goto/getItemSegs.action?iid=#{page_get_iid}"
+      end
+    end
+
     def initialize(url)
       @url = url
-    end
-
-    def response
-      @response ||= tudou_connect
-    end
-
-    def xml_response
-      @xml_response = Nokogiri::XML(response)
-    end
-
-    def info
-      @info ||= parse_html
+      parse_page
+      get_type
+      if !swf_iid && url_type != "views"
+        get_item_info(page_get_iid)
+      end
     end
 
     def id
-      iid
+      page_get_iid
     end
 
     def html_url
-      if url =~ /\/(a|o|l)\/.*.\.swf/
-       type = url.scan(/\/(a|o|l)\/.*.\.swf/)[0][0]
-       case type
-       when "a"
-        "http://www.tudou.com/albumplay/#{acode}#{"/" + lcode if lcode }.html"
-       when "o"
-         "http://www.tudou.com/oplay/#{acode}#{"/" + lcode if lcode}.html"
-       when "l"
-         "http://www.tudou.com/listplay/#{acode}#{"/" + lcode if lcode}.html"
-       end
-      elsif url =~ /dp\.tudou.com\/(a|o|l|v|albumplay|oplay|listplay)\//
-        type = url.scan(/dp\.tudou.com\/(a|o|l|v|albumplay|oplay|listplay)\/.*.\.html/)[0][0]
-        case type
-       when "a", "albumplay"
-        "http://www.tudou.com/albumplay/#{acode}#{"/" + lcode if lcode}.html"
-       when "o", "oplay"
-         "http://www.tudou.com/oplay/#{acode}#{"/" + lcode if lcode}.html"
-       when "l", "listplay"
-         "http://www.tudou.com/listplay/#{acode}#{"/" + lcode if lcode}.html"
-       when "v"
-         "http://www.tudou.com/programs/view/#{lcode}/"
-       end
-      elsif url =~ /www\.tudou.com\/(programs|albumplay|listplay)/
-        url
-      elsif url =~ /www\.tudou.com\/oplay/
-         url_id = url.match(/www\.tudou.com\/oplay\/(.*.).html/)[1]
-        "http://www.tudou.com/albumplay/#{url_id}.html"
-      else
-        "http://www.tudou.com/programs/view/#{lcode}/"
+      case url_type
+      when "views"
+        "http://www.tudou.com/programs/view/#{page_get_icode}/"
+      when "albumplay", "oplay"
+        "http://www.tudou.com/albumplay/#{page_get_lcode}/#{page_get_icode}.html"
+      when "listplay"
+        "http://www.tudou.com/listplay/#{page_get_lcode}/#{page_get_icode}.html"
       end
     end
 
     def title
-      xml_response.children()[0].attr("title")
+      if page_get_title.encoding != 'UTF-8'
+        CGI.unescapeHTML(page_get_title)
+      else
+        page_get_title
+      end
     end
 
     def cover
-      info.match(/pic\s*:\s*(\S+)/)[1].delete("\"").gsub(/["|']/,"")
+      if url_type == "albumplay" || url_type == "oplay"
+        response["data"][0]["logo"]
+      else
+        page_get_pic
+      end
     end
 
     def flash
-      if url =~ /\/(v|a|o|l)\/.*.\.swf/
-        url
-      elsif url =~ /\/(albumplay|listplay|oplay)/
-        url_type = url.scan(/\/((a)lbumplay|(l)istplay|(o)play)/)[0].compact()[1]
-        "http://www.tudou.com/#{url_type}/#{acode}/&rpid=116105338&resourceId=116105338_04_05_99&iid=#{iid}/v.swf"
-      elsif url =~ /dp\.tudou\.com\/(l|a|o)/
-        url_type = url.scan(/dp\.tudou.com\/(a|l|o)/)[0][0]
-        "http://www.tudou.com/#{url_type}/#{acode}/&rpid=116105338&resourceId=116105338_04_05_99&iid=#{iid}/v.swf"
-      elsif url =~ /dp\.tudou\.com\/v/
-        "http://www.tudou.com/v/#{lcode}/&rpid=116105338&resourceId=116105338_04_05_99/v.swf"
-      else
-        "http://www.tudou.com/v/#{lcode}/&rpid=116105338&resourceId=116105338_04_05_99/v.swf"
+      case url_type
+      when "views"
+        "http://www.tudou.com/v/#{page_get_icode}/v.swf"
+      when "albumplay", "oplay"
+        "http://www.tudou.com/a/#{page_get_lcode}/&iid=#{page_get_iid}/v.swf"
+      when "listplay"
+        "http://www.tudou.com/l/#{page_get_lcode}/&iid=#{page_get_iid}/v.swf"
       end
     end
 
     def m3u8
-      "http://vr.tudou.com/v2proxy/v2.m3u8?it=#{iid}&st=2&pw="
+      "http://vr.tudou.com/v2proxy/v2.m3u8?it=#{page_get_iid}&st=2&pw="
     end
 
-    def media
-      video_list = {}
-      video_list["f4v"] = []
-      video_list["flv"] = []
-      old_brt = ""
-      xml_response.css("f").each do | file |
-      brt = file.attr("brt")
-      if brt != old_brt
-        if file.content =~ /f4v/
-          video_list["f4v"] << file.content
-        elsif file.content =~ /flv/
-          video_list["flv"] << file.content
-        end
-        old_brt = brt
+    def media(type = nil)
+      if url_type == "albumplay" || url_type == "oplay"
+        albumplay_media(type)
+      else
+        view_media(type)
       end
-      end
-      return video_list
     end
 
     private
 
-    def tudou_connect
-      uri = URI.parse "http://ct.v2.tudou.com/f?id=#{iid}"
-      http = Net::HTTP.new uri.host, uri.port
-      req = Net::HTTP::Get.new(uri.request_uri,{"User-Agent"=> ""})
-      res = http.request req
-      res.body
-    end
-
-    def lcode
-      if url =~ /\/v\/.*.\.swf/
-        url.scan(/\/v\/([^\/]+)\//)[0][0]
-      elsif url =~ /dp\.tudou\.com\/(l|a|o|listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
-        url.scan(/dp\.tudou\.com\/(?:l|a|o|listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)[0][1]
-      elsif url =~ /dp\.tudou\.com\/(l|a|o|listplay|albumplay|oplay)\/([^.]+)\.html/
-        nil
-      elsif url =~ /dp\.tudou\.com\/v\/([^.]+)\.html/
-        url.scan(/dp\.tudou\.com\/v\/([^.]+)\.html/)[0][0]
+    def get_items
+      if url_type == "albumplay" || url_type == "oplay"
+        Getvideo::Response.new(Faraday.get("http://www.tudou.com/outplay/goto/getAlbumItems.html?aid=#{page_get_lid}")).parsed
+      elsif url_type == "listplay"
+        Getvideo::Response.new(Faraday.get("http://www.tudou.com/outplay/goto/getPlaylistItems.html?lid=#{page_get_lid}")).parsed
       else
-        tudou_connect
-        Nokogiri::XML(response).children()[0].attr("code")
+        nil
       end
     end
 
-    def acode
+    def get_item_info(id)
+      get_items["message"].each do |item|
+        if item["itemId"].to_s == id
+          @item_info = item
+          break
+        end
+      end
+    end
+
+    def parse_page
+      video_url = get_url
+      if swf_iid
+        res = Faraday.get(video_url)
+        @swf_info = {}
+        res.headers['location'].split("?")[1].split("&").each do |data|
+          data_info =  data.split("=")
+          if data_info.length > 1
+            @swf_info[data_info[0]] = CGI::unescape(data_info[1])
+          end
+        end
+      else
+        @page = Getvideo::Response.new(Faraday.get(video_url)).parsed.css("script").text
+      end
+    end
+
+    def get_type
+      type = url.match(/\/(v|a|o|l|listplay|albumplay|oplay|programs)\//)[1]
+      @url_type = case type
+                  when "v", "programs"
+                    "views"
+                  when "a", "albumplay"
+                    "albumplay"
+                  when "o",  "oplay"
+                    "oplay"
+                  when "l", "listplay"
+                    "listplay"
+                  end
+    end
+
+    def get_url
       if url =~ /\/(a|o|l)\/.*.\.swf/
-        url.scan(/\/[a|o|l]\/([^\/]+)\//)[0][0]
-      elsif url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/
-        url.scan(/\/(?:listplay|albumplay|oplay)\/([^.]+)\/([^.]+)\.html/)[0][0]
-      elsif url =~ /dp\.tudou\.com\/(l|a|o)\/([^.]+)\/([^.]+)\.html/
-        url.scan(/dp\.tudou\.com\/(?:l|a|o)\/([^.]+)\/([^.]+)\.html/)[0][0]
-      elsif url =~ /dp\.tudou\.com\/(l|a|o)\/([^.]+)\.html/
-        url.scan(/dp\.tudou\.com\/(?:l|a|o)\/([^.]+)\.html/)[0][0]
-
-      elsif url =~ /\/(listplay|albumplay|oplay)\/([^.]+)\.html/
-        url.scan(/\/(?:listplay|albumplay|oplay)\/([^.]+)\.html/)[0][0]
-      end
-    end
-
-    def iid
-      if url =~ /\/(programs|albumplay|listplay|oplay)/
-        get_iid[0][0]
+        code = url.match(/\/[a|o|l]\/([^\/]+)\//)[1]
+        @swf_iid = url.match(/iid=([^&]+)/)[1]
+        type = url.match(/\/(a|o|l)\/.*.\.swf/)[1]
+        url
       elsif url =~ /\/v\/.*.\.swf/
-        get_iid[0][0]
-      elsif url =~ /\/(a|o|l)\/.*.\.swf/
-        url.scan(/iid=([^\/]+)/)[0][0]
-      elsif url =~ /dp\.tudou\.com\/(a|o|l|v)\//
-        get_iid[0][0]
-      elsif url =~ /dp\.tudou\.com\/player\.php/
-        url.scan(/player\.php\?id=([^&]+)/)[0][0]
-      elsif url =~ /dp.tudou.com\/nplayer\.swf/
-        url.scan(/nplayer\.swf\?([^&]+)/)[0][0]
+        code = url.match(/\/v\/([^\/]+)\//)[1]
+        "http://www.tudou.com/programs/view/#{code}/"
+      elsif url =~ /www\.tudou.com\/oplay/
+        url_id = url.match(/www\.tudou.com\/oplay\/(.*.).html/)[1]
+        "http://www.tudou.com/albumplay/#{url_id}.html"
       else
         url
       end
     end
 
-    def get_iid
-      info.scan(/iid\s*:\s*(\S+)/)
+    def page_get_lid
+      if swf_iid
+        if url_type == "albumplay"
+          swf_info["aid"]
+        elsif url_type == "listplay"
+          swf_info["lid"]
+        end
+      else
+        page_match(/lid[\s|'|:]*(\S+)/)[1]
+      end
     end
 
-    def parse_html
-      Faraday.get(html_url).body
+    def page_get_lcode
+      if swf_iid
+        if url_type == "albumplay" || url_type == "oplay"
+          swf_info["aCode"]
+        elsif url_type == "listplay"
+          swf_info["lCode"]
+        else
+        end
+      else
+        page_match(/lcode[\s|'|:]*(\S+)'/)[1]
+      end
     end
+
+    def page_get_iid
+      swf_iid || (page_match(/iid[\s|'|:]*(\S+)/)[1])
+    end
+
+    def page_get_icode
+      if swf_iid
+        if url_type == "oplay"
+          swf_info["ablumItemCode"]
+        else
+          swf_info["code"]
+        end
+      else
+        if url_type == "albumplay" || url_type == "listplay"
+          item_info["code"]
+        else
+          page_match(/icode[\s|'|:]*(\S+)'/)[1]
+        end
+      end
+    end
+
+    def page_get_vcode
+      if swf_iid
+        swf_info["vcode"]
+      else
+        if url_type == "albumplay"
+          item_info["vcode"]
+        else
+          page_match(/vcode[\s|'|:]*(\S+)'/)[1]
+        end
+      end
+    end
+
+    def page_get_title
+      if swf_iid
+        swf_info["title"]
+      else
+        if url_type == "albumplay" 
+          item_info["albumItemShortDescription"]
+        elsif url_type == "listplay"
+          item_info["title"]
+        else
+          page_match(/,kw[\s|'|:]*(\S+.*)'/)[1] 
+        end
+      end
+    end
+
+    def page_get_pic
+      if swf_iid
+        swf_info["snap_pic"]
+      else
+        if url_type == "albumplay" || url_type == "listplay"
+          item_info["picUrl"] 
+        else
+          page_match(/pic[\s|'|:]*(\S+)'/)[1]
+        end
+      end
+    end
+
+    def page_match(regex)
+      data = page.match(regex)
+      data || []
+    end
+
+    def view_media(type = nil)
+      video_list = {}
+      video_type = {
+        "2" => "f4v_sd",
+        "3" => "f4v_hd", 
+        "4" => "f4v",
+        "5" => "f4v_fhd",
+        "52" => "mp4"
+      }
+      conn = Faraday.new "http://v2.tudou.com"
+      conn.headers["User-Agent"] = ""
+      response.each do |key, val|
+        type = video_type[key] || key
+        video_list[type] = []
+        val.each do |video|
+          video_list[type] << Getvideo::Response.new(conn.get("http://v2.tudou.com/f?id=#{video["k"]}", )).parsed["f"]["__content__"]
+        end
+      end
+      return video_list
+    end
+
+    def albumplay_media(type = nil)
+      video_list = {}
+      response["data"][0]["streamfileids"].each_key do |type|
+        stream = parse_stream(type)
+        video_list[type] = []
+        segs(type).each do |s|
+          video_list[type] << "http://f.youku.com/player/getFlvPath/sid/" + sid + "/st/#{type}/fileid/#{stream[0..8]+s["no"].to_i.to_s(16)+stream[10..-1]}_0#{s["no"].to_i.to_s(16)}?K="+s["k"] if s["k"] != -1
+        end
+      end
+      return video_list
+    end
+
+    def sid
+      Time.now.to_i.to_s + rand(10..99).to_s+ "1000" + rand(30..80).to_s+"00"
+    end
+
+    def segs(type)
+      response["data"][0]["segs"][type]
+    end
+
+    def videoid
+      response["data"][0]["videoid"]
+    end
+
+    def parse_stream(type)
+      seed = response["data"][0]["seed"]
+      stream_fileids = response["data"][0]["streamfileids"][type]
+      random_text = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/\:._-1234567890'
+
+      text = ""
+      random_text.each_char do |t|
+        seed = (seed * 211 + 30031) % 65536
+        cuch = ((seed / 65536.0) * random_text.length).to_i 
+        char = random_text[cuch]
+        text = text + char 
+        random_text = random_text.gsub(char, "")
+      end
+
+      real_text = ""
+      stream_fileids.split("*").each do |s|
+        real_text = real_text + text.to_s[s.to_i]
+      end
+      return real_text 
+    end
+
+    attr_accessor :page, :swf_iid, :url_type, :item_info, :swf_info
   end
 end

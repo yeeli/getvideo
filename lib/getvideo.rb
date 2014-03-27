@@ -4,6 +4,7 @@ require 'cgi'
 require 'json'
 require 'nokogiri'
 require 'multi_json'
+require 'multi_xml'
 require 'getvideo/video'
 require "getvideo/version"
 require "getvideo/youku"
@@ -13,7 +14,7 @@ require "getvideo/tudou"
 require "getvideo/sohu"
 require "getvideo/iqiyi"
 require "getvideo/youtube"
-require 'getvideo/iask'
+require 'getvideo/sina'
 
 module Getvideo
   def self.parse(url)
@@ -32,7 +33,7 @@ module Getvideo
     elsif url =~ /youtube/
       Youtube.new(url)
     else url =~ /(iask|sina)/
-      Iask.new(url)
+      Sina.new(url)
     end
   end
 end

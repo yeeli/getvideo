@@ -17,5 +17,6 @@ Gem::Specification.new do |gem|
   gem.version       = Getvideo::VERSION
   gem.add_dependency 'faraday'
   gem.add_dependency 'multi_json'
+  gem.add_dependency 'multi_xml'
   gem.add_dependency 'nokogiri'
 end

@@ -68,13 +68,14 @@ module Getvideo
       'application/x-www-form-urlencoded' => :html,
       'text/html' => :html,
       'text/javascript' => :json,
-      'text/xml' => :xml
+      'text/xml' => :xml,
+      "text/plain" => :json
     }
 
     PARSERS = {
       :json => lambda{ |body| MultiJson.respond_to?(:adapter) ? MultiJson.load(body) : MultiJson.decode(body) rescue body },
       :html => lambda{ |body| Nokogiri::HTML(body) },
-      :xml => lambda{ |body| Nokogiri::XML(body) }
+      :xml => lambda{ |body| MultiXml.parse(body) }
     }
 
     def headers
