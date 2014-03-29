@@ -32,8 +32,10 @@ module Getvideo
       Ku6.new(url)
     elsif url =~ /youtube/
       Youtube.new(url)
-    else url =~ /(iask|sina)/
+    elsif url =~ /(iask|sina)/
       Sina.new(url)
+    else
+      return false
     end
   end
 end
