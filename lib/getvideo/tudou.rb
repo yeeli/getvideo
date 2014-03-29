@@ -45,7 +45,11 @@ module Getvideo
 
     def cover
       if url_type == "albumplay" || url_type == "oplay"
-        response["data"][0]["logo"]
+        if data = response["data"]
+          data[0]["logo"]
+        else
+          page_get_pic
+        end
       else
         page_get_pic
       end
