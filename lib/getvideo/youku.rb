@@ -17,11 +17,15 @@ module Getvideo
     end
 
     def title
-      response["data"][0]["title"]
+      if data = response["data"]
+        data[0]["title"]
+      end
     end
 
     def cover
-      response["data"][0]["logo"]
+      if data = response["data"]
+        data[0]["logo"]
+      end
     end
 
     def flash
@@ -34,11 +38,13 @@ module Getvideo
 
     def media(type = nil)
       video_list = {}
-      response["data"][0]["streamfileids"].each_key do |type|
-        stream = parse_stream(type)
-        video_list[type] = []
-        segs(type).each do |s|
-          video_list[type] << "http://f.youku.com/player/getFlvPath/sid/" + sid + "/st/#{type}/fileid/#{stream[0..8]+s["no"].to_i.to_s(16)+stream[10..-1]}_0#{s["no"].to_i.to_s(16)}?K="+s["k"] if s["k"] != -1
+      if data = response["data"]
+        data[0]["streamfileids"].each_key do |type|
+          stream = parse_stream(type)
+          video_list[type] = []
+          segs(type).each do |s|
+            video_list[type] << "http://f.youku.com/player/getFlvPath/sid/" + sid + "/st/#{type}/fileid/#{stream[0..8]+s["no"].to_i.to_s(16)+stream[10..-1]}_0#{s["no"].to_i.to_s(16)}?K="+s["k"] if s["k"] != -1
+          end
         end
       end
       return video_list
@@ -55,7 +61,9 @@ module Getvideo
     end
 
     def videoid
-      response["data"][0]["videoid"]
+      if data = response["data"]
+        data[0]["videoid"]
+      end
     end
 
     def parse_stream(type)
@@ -76,6 +84,7 @@ module Getvideo
       stream_fileids.split("*").each do |s|
         real_text = real_text + text.to_s[s.to_i]
       end
+
       return real_text 
     end
   end
