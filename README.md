@@ -34,15 +34,16 @@ check faraday, multi_json, nokogiri gems installed
 	require 'getvideo'
 	
 	video = Getvideo.parse "http://videourl.com/info"
-	video.cover 
-	video.id
-	video.html_url
-	video.title
-	video.media #get all video url like {"mp4" => "http://mp4 play url", "hlv" => "http://hlv"}
-	video.flash
-	video.play_media  # get mp4 video
-	video.json
-````
+	video.cover # 视频网站提供的截图或封面
+	video.id #视频的ID，用来在视频网站查询视频
+	video.html_url #视频的源url
+	video.title #视频的标题
+	video.media #获取视频内容 {"mp4" => "http://mp4 play url", "hlv" => "http://hlv"}
+	video.flash #视频flash格式
+	video.play_media  #已获取视频内容，选取一条作为播放内容
+	video.json #以json格式显示
+```
+
 ## Contributing
 
 1. Fork it
