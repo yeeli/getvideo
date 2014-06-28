@@ -100,32 +100,39 @@ module Getvideo
 
     def set_id
       if url =~ /\/v\/b\/([^\D]+)-([^\D]+)\.html/
-        ids =  url.scan(/\/v\/b\/([^\D]+)-([^\D]+)\.html/)[0]
-        @id = ids[0]
-        @uid = ids[1]
+        if ids =  url.scan(/\/v\/b\/([^\D]+)-([^\D]+)\.html/)[0]
+          @id = ids[0]
+          @uid = ids[1]
+        end
       elsif url =~ /\/playlist\/([^\D]+).*.#([^\D]+)/
-        ids = url.scan(/\/playlist\/[^\D]+-([^\D]+).*#([^\D]+)/)[0]
-        @id = ids[1]
-        @uid = ids[0]
+        if ids = url.scan(/\/playlist\/[^\D]+-([^\D]+).*#([^\D]+)/)[0]
+          @id = ids[1]
+          @uid = ids[0]
+        end
       elsif url =~ /\.swf/
-        ids = url.scan(/vid=([^\D]+)_([^\D]+)_.+\.swf/)[0]
-        @id = ids[0]
-        @uid = ids[1]
+        if ids = url.scan(/vid=([^\D]+)_([^\D]+)_.+\.swf/)[0]
+          @id = ids[0]
+          @uid = ids[1]
+        end
       elsif url =~ /(\/[\S]?\/)/
         if url.index("#").nil?
           html = parse_html
-          ids = html.scan(/vid[\s]?:[\s]?['|"]([^\D]+)['|"]/)[0]
-          uids = html.scan(/uid[\s]?:[\s]?['|"]([^\D]+)['|"]/)[0]
-          @id = ids[0]
-          @uid = uids[0]
+          if uids = html.scan(/uid[\s]?:[\s]?['|"]([^\D]+)['|"]/)[0]
+            @uid = uids[0]
+          end
+          if ids = html.scan(/vid[\s]?:[\s]?['|"]([^\D]+)['|"]/)[0]
+            @id = ids[0]
+          end
         else
-          ids = url.scan(/(\/[\S]?\/).+#([^\D]+)/)[0]
+          if ids = url.scan(/(\/[\S]?\/).+#([^\D]+)/)[0]
             @id = ids[1]
+          end
         end
       else
-        ids = url.split("|")
-        @id = ids[0]
-        @uid = ids[1]
+        if ids = url.split("|")
+          @id = ids[0]
+          @uid = ids[1]
+        end
       end
     end
 
