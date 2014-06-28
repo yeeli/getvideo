@@ -11,7 +11,7 @@ getvideo is parse video information on Ruby, you can get video media download ur
 * 爱奇艺 [http://www.iqiyi.com/](http://www.iqiyi.com/)
 * 搜狐视频 [http://tv.sohu.com/](http://tv.sohu.com/)
 * 酷6网 [http://www.ku6.com/](http://www.ku6.com/)
-* 新浪视频 [http://video.sina.com.cn/](http://video.sina.com.cn/)
+* 新浪视频 [http://video.sina.com.cn/](http://video.sina.com.cn/)(已失效,无法获取最新视频)
 
 ## Installation
 
