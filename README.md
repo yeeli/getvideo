@@ -2,7 +2,7 @@
 
 getvideo is parse video information on Ruby, you can get video media download url, cover, flash url and title.
 
-## Support Sites List
+## 网站支持列表
 
 * Youtube [http://www.youtube.com/](http://www.youtube.com/)
 * 优酷网 [http://www.youku.com/](http://www.youku.com/)
@@ -13,22 +13,22 @@ getvideo is parse video information on Ruby, you can get video media download ur
 * 酷6网 [http://www.ku6.com/](http://www.ku6.com/)
 * 新浪视频 [http://video.sina.com.cn/](http://video.sina.com.cn/)
 
-## Installation
+## 安装
 
-Add this line to your application's Gemfile:
+在你的程序中的Gemfile中添加下列:
 
     gem 'getvideo'
 
-And then execute:
+并执行:
 
     $ bundle
 
-Or install it yourself as
+或者通过gem直接安装
 
     $ gem install getvideo        
 
-## Usage
-check faraday, multi_json, nokogiri gems installed
+## 使用
+请确认 faraday, multi_json, nokogiri等Gems是否已经安装
 
 ```
 	require 'getvideo'
@@ -43,14 +43,6 @@ check faraday, multi_json, nokogiri gems installed
 	video.play_media  #已获取视频内容，选取一条作为播放内容
 	video.json #以json格式显示
 ```
-
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
 
 ## Thanks
 
